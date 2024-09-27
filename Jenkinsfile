@@ -49,12 +49,14 @@ pipeline {
         }
 
         stage('Release') {
-            steps {
-                echo 'Releasing the application to production...'
-                // Activate virtual environment and run the app for production
-                sh '. venv/bin/activate && nohup python app.py &'
-            }
-        }
+    steps {
+        echo 'Releasing the application to production...'
+        // Stop the app if it's running on port 5000 (optional)
+        sh 'fuser -k 5000/tcp || true'
+        // Run the app on a different port, e.g., 5001
+        sh '. venv/bin/activate && nohup python app.py --port=5001 &'
+    }
+}
 
         stage('Monitoring and Alerting') {
             steps {
