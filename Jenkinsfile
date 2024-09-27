@@ -11,10 +11,14 @@ pipeline {
                 echo 'Setting up Python and installing dependencies...'
                 // Ensure Python and pip are available and create a virtual environment
                 sh 'python3 --version'
+                // Remove existing virtual environment (to ensure clean install)
+                sh 'rm -rf venv'
+                // Create a new virtual environment
                 sh 'python3 -m venv venv'
+                // Activate the virtual environment and install dependencies
                 sh '. venv/bin/activate && pip install --upgrade pip'
                 sh '. venv/bin/activate && pip install -r requirements.txt'
-                // Install pytest within the virtual environment
+                // Install pytest
                 sh '. venv/bin/activate && pip install pytest'
             }
         }
@@ -22,7 +26,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // Set the PYTHONPATH to ensure 'app.py' is found
+                // Activate the virtual environment and run pytest
                 sh 'export PYTHONPATH=$PWD && . venv/bin/activate && venv/bin/pytest tests/'
             }
         }
@@ -30,7 +34,7 @@ pipeline {
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running code quality analysis...'
-                // Activate the virtual environment and run flake8 (or replace with SonarQube)
+                // Activate the virtual environment and run flake8
                 sh '. venv/bin/activate && pip install flake8'
                 sh '. venv/bin/activate && flake8 --exit-zero app.py'
             }
@@ -39,7 +43,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying the application to the test environment...'
-                // Deploy the application to the test environment
+                // Activate virtual environment and run the app
                 sh '. venv/bin/activate && nohup python app.py &'
             }
         }
@@ -47,7 +51,7 @@ pipeline {
         stage('Release') {
             steps {
                 echo 'Releasing the application to production...'
-                // Deploy the application to the production environment
+                // Activate virtual environment and run the app for production
                 sh '. venv/bin/activate && nohup python app.py &'
             }
         }
@@ -55,7 +59,7 @@ pipeline {
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
-                // Simulate monitoring the application
+                // Check if the application is running
                 sh 'curl http://localhost:5000 || echo "App is down!"'
             }
         }
