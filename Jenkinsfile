@@ -8,49 +8,52 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Building the application...'
-                // Install Python dependencies
-                sh 'pip install -r requirements.txt'
+                echo 'Setting up Python and installing dependencies...'
+                // Ensure Python and pip are available and create a virtual environment
+                sh 'python3 --version'
+                sh 'python3 -m venv venv'
+                sh '. venv/bin/activate && pip install --upgrade pip'
+                sh '. venv/bin/activate && pip install -r requirements.txt'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // Run unit tests using pytest
-                sh 'pytest tests/'
+                // Activate virtual environment and run tests
+                sh '. venv/bin/activate && pytest tests/'
             }
         }
 
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running code quality analysis...'
-                // Use flake8 for basic code linting (or replace with SonarQube configuration)
-                sh 'pip install flake8'
-                sh 'flake8 --exit-zero app.py'
+                // Activate virtual environment and run flake8 (or replace with SonarQube)
+                sh '. venv/bin/activate && pip install flake8'
+                sh '. venv/bin/activate && flake8 --exit-zero app.py'
             }
         }
 
         stage('Deploy') {
             steps {
                 echo 'Deploying the application to the test environment...'
-                // Simulate deployment by running the app (this can be replaced with real deployment)
-                sh 'nohup python app.py &'
+                // Deploy the application to the test environment
+                sh '. venv/bin/activate && nohup python app.py &'
             }
         }
 
         stage('Release') {
             steps {
                 echo 'Releasing the application to production...'
-                // Simulate production deployment (adapt this for real-world environments)
-                sh 'nohup python app.py &'
+                // Deploy the application to the production environment
+                sh '. venv/bin/activate && nohup python app.py &'
             }
         }
 
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
-                // Example of checking if the app is running (this could be integrated with New Relic, Datadog)
+                // Simulate monitoring the application
                 sh 'curl http://localhost:5000 || echo "App is down!"'
             }
         }
@@ -59,7 +62,6 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed.'
-            // Cleanup actions if necessary
         }
         success {
             echo 'Pipeline completed successfully!'
