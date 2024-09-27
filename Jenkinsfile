@@ -2,11 +2,12 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_ENV = 'SonarQube'
         DOCKER_IMAGE = 'todo-app:latest'
+        SONARQUBE_ENV = 'SonarQube' // This should match the SonarQube server name configured in Jenkins
     }
 
     stages {
+        // Build Stage
         stage('Build') {
             steps {
                 echo 'Setting up Python and installing dependencies...'
@@ -25,6 +26,7 @@ pipeline {
             }
         }
 
+        // Static Code Analysis Stage using pylint
         stage('Static Code Analysis') {
             steps {
                 echo 'Running pylint for static code analysis...'
@@ -34,6 +36,7 @@ pipeline {
             }
         }
 
+        // Security Scanning Stage using bandit
         stage('Security Scanning') {
             steps {
                 echo 'Running bandit for security scanning...'
@@ -43,6 +46,7 @@ pipeline {
             }
         }
 
+        // Test Stage using pytest
         stage('Test') {
             steps {
                 echo 'Running tests...'
@@ -51,15 +55,18 @@ pipeline {
             }
         }
 
+        // Code Quality Analysis Stage using SonarQube
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running SonarQube analysis...'
                 withSonarQubeEnv(SONARQUBE_ENV) {
-                    sh 'sonar-scanner -Dsonar.projectKey=todo-app -Dsonar.sources=./ -Dsonar.python.version=3.8'
+                    // SonarQube scanner command
+                    sh 'sonar-scanner -Dsonar.projectKey=todo-app -Dsonar.sources=./ -Dsonar.language=py -Dsonar.host.url=http://your-sonarqube-server-url -Dsonar.login=your-sonarqube-token'
                 }
             }
         }
 
+        // Packaging Stage
         stage('Packaging') {
             steps {
                 echo 'Packaging the Python application...'
@@ -70,6 +77,7 @@ pipeline {
             }
         }
 
+        // Deploy Stage using Gunicorn
         stage('Deploy') {
             steps {
                 echo 'Deploying the Flask app locally on port 5000...'
@@ -82,6 +90,7 @@ pipeline {
             }
         }
 
+        // Performance Testing Stage
         stage('Performance Testing') {
             steps {
                 echo 'Running performance testing using Apache Benchmark...'
@@ -90,6 +99,7 @@ pipeline {
             }
         }
 
+        // Backup Stage
         stage('Backup') {
             steps {
                 echo 'Backing up important files...'
@@ -99,6 +109,7 @@ pipeline {
             }
         }
 
+        // Release Stage
         stage('Release') {
             steps {
                 echo 'Releasing to production...'
@@ -109,6 +120,7 @@ pipeline {
             }
         }
 
+        // Monitoring and Alerting Stage
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
@@ -118,6 +130,7 @@ pipeline {
         }
     }
 
+    // Post Actions
     post {
         always {
             echo 'Pipeline completed.'
