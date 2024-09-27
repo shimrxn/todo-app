@@ -22,8 +22,8 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // Activate the virtual environment and run pytest
-                sh '. venv/bin/activate && venv/bin/pytest tests/'
+                // Set the PYTHONPATH to ensure 'app.py' is found
+                sh 'export PYTHONPATH=$PWD && . venv/bin/activate && venv/bin/pytest tests/'
             }
         }
 
