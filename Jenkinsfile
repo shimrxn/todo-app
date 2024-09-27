@@ -10,13 +10,16 @@ pipeline {
                 sh 'python3 -m venv venv'
                 sh '. venv/bin/activate && pip install --upgrade pip'
                 sh '. venv/bin/activate && pip install -r requirements.txt'
+                // Install pytest within the virtual environment
+                sh '. venv/bin/activate && pip install pytest'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'export PYTHONPATH=$PWD && . venv/bin/activate && venv/bin/pytest tests/'
+                // Activate virtual environment and run pytest as a Python module
+                sh '. venv/bin/activate && python -m pytest tests/'
             }
         }
 
@@ -31,7 +34,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying the application to the test environment...'
-                sh 'fuser -k 5000/tcp || true'  // Stop previous instance
+                sh 'fuser -k 5000/tcp || true'
                 sh '. venv/bin/activate && gunicorn --bind 0.0.0.0:5001 app:app --daemon'
                 sh 'curl http://localhost:5001 || echo "App did not start successfully"'
             }
@@ -40,7 +43,7 @@ pipeline {
         stage('Release') {
             steps {
                 echo 'Releasing the application to production...'
-                sh 'fuser -k 5001/tcp || true'  // Stop previous production instance
+                sh 'fuser -k 5001/tcp || true'
                 sh '. venv/bin/activate && gunicorn --bind 0.0.0.0:5001 app:app --daemon'
                 sh 'curl http://localhost:5001 || echo "App did not start successfully"'
             }
