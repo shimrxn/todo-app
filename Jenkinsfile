@@ -16,6 +16,9 @@ pipeline {
                 sh '. venv/bin/activate && pip install --upgrade pip'
                 sh '. venv/bin/activate && pip install -r requirements.txt'
 
+                // Ensure pytest is installed for running tests
+                sh '. venv/bin/activate && pip install pytest'
+
                 echo 'Creating a build artifact (ZIP file)...'
                 sh 'zip -r todo-app.zip *'
                 archiveArtifacts artifacts: 'todo-app.zip'
@@ -43,6 +46,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
+                // Activate virtual environment and run pytest
                 sh '. venv/bin/activate && python -m pytest tests/'
             }
         }
@@ -59,6 +63,7 @@ pipeline {
         stage('Packaging') {
             steps {
                 echo 'Packaging the Python application...'
+                // Create a source distribution or wheel
                 sh '. venv/bin/activate && pip install wheel'
                 sh '. venv/bin/activate && python setup.py sdist bdist_wheel'
                 archiveArtifacts artifacts: 'dist/*.whl'
@@ -68,8 +73,11 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying the Flask app locally on port 5000...'
+                // Stop any running instance
                 sh 'fuser -k 5000/tcp || true'
+                // Run the app using Gunicorn
                 sh '. venv/bin/activate && gunicorn --bind 0.0.0.0:5000 app:app --daemon --log-file gunicorn.log --access-logfile gunicorn-access.log'
+                // Verify the app is running
                 sh 'curl http://localhost:5000 || echo "App did not start successfully"'
             }
         }
@@ -79,14 +87,13 @@ pipeline {
                 echo 'Running performance testing using Apache Benchmark...'
                 // Performance testing using Apache Benchmark
                 sh 'ab -n 100 -c 10 http://localhost:5000/'
-                // You can also replace 'ab' with a different tool like locust or wrk if you prefer
             }
         }
 
         stage('Backup') {
             steps {
                 echo 'Backing up important files...'
-                // Create a backup of logs or other important files (e.g., backup to a remote server)
+                // Backup logs
                 sh 'mkdir -p backups && cp gunicorn.log backups/gunicorn-$(date +%F).log'
                 archiveArtifacts artifacts: 'backups/*.log'
             }
@@ -95,6 +102,7 @@ pipeline {
         stage('Release') {
             steps {
                 echo 'Releasing to production...'
+                // Simulate production release
                 sh 'fuser -k 5000/tcp || true'
                 sh '. venv/bin/activate && gunicorn --bind 0.0.0.0:5000 app:app --daemon --log-file gunicorn-production.log --access-logfile gunicorn-production-access.log'
                 sh 'curl http://localhost:5000 || echo "App did not start successfully"'
@@ -104,6 +112,7 @@ pipeline {
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Setting up monitoring and alerting...'
+                // Check if the app is running
                 sh 'curl http://localhost:5000 || echo "App is down!"'
             }
         }
