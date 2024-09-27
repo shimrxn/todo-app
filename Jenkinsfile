@@ -14,21 +14,23 @@ pipeline {
                 sh 'python3 -m venv venv'
                 sh '. venv/bin/activate && pip install --upgrade pip'
                 sh '. venv/bin/activate && pip install -r requirements.txt'
+                // Install pytest within the virtual environment
+                sh '. venv/bin/activate && pip install pytest'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // Activate virtual environment and run tests
-                sh '. venv/bin/activate && pytest tests/'
+                // Activate the virtual environment and run pytest
+                sh '. venv/bin/activate && venv/bin/pytest tests/'
             }
         }
 
         stage('Code Quality Analysis') {
             steps {
                 echo 'Running code quality analysis...'
-                // Activate virtual environment and run flake8 (or replace with SonarQube)
+                // Activate the virtual environment and run flake8 (or replace with SonarQube)
                 sh '. venv/bin/activate && pip install flake8'
                 sh '. venv/bin/activate && flake8 --exit-zero app.py'
             }
