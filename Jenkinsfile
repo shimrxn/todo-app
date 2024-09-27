@@ -51,16 +51,6 @@ pipeline {
             }
         }
 
-        // Packaging the Python application
-        stage('Packaging') {
-            steps {
-                echo 'Packaging application...'
-                sh '. venv/bin/activate && pip install wheel'
-                sh '. venv/bin/activate && python setup.py sdist bdist_wheel'
-                archiveArtifacts artifacts: 'dist/*.whl'
-            }
-        }
-
         // Deploy Stage using Gunicorn
         stage('Deploy') {
             steps {
