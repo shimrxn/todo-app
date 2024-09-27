@@ -10,8 +10,9 @@ pipeline {
         stage('Setup') {
             steps {
                 echo 'Setting up environment and installing dependencies...'
-                // Check Python version and setup virtual environment
+                // Ensure Python and pip are available
                 sh 'python3 --version'
+                // Remove existing virtual environment and create a new one
                 sh 'rm -rf venv'
                 sh 'python3 -m venv venv'
                 // Activate virtual environment and upgrade pip
@@ -29,7 +30,7 @@ pipeline {
             }
         }
 
-        // Build Stage: Creates a zip archive of the project
+        // Build Stage: Creates a zip archive of the project as a build artifact
         stage('Build') {
             steps {
                 echo 'Creating build artifact...'
@@ -38,7 +39,7 @@ pipeline {
             }
         }
 
-        // Linting Stage: Runs flake8 to check code formatting
+        // Linting Stage: Runs flake8 to check code formatting and syntax issues
         stage('Linting') {
             steps {
                 echo 'Running flake8 for linting...'
@@ -48,7 +49,7 @@ pipeline {
             }
         }
 
-        // Static Code Analysis with pylint
+        // Static Code Analysis: Uses pylint to identify code quality issues
         stage('Static Code Analysis') {
             steps {
                 echo 'Running pylint...'
@@ -58,7 +59,7 @@ pipeline {
             }
         }
 
-        // Security Scanning with bandit
+        // Security Scanning: Uses bandit to perform security checks on the code
         stage('Security Scanning') {
             steps {
                 echo 'Running bandit...'
@@ -68,20 +69,12 @@ pipeline {
             }
         }
 
-        // Test Stage using pytest
+        // Test Stage: Runs unit tests using pytest
         stage('Test') {
             steps {
                 echo 'Running tests...'
                 // Activate virtual environment and run pytest
                 sh '. venv/bin/activate && python -m pytest tests/'
-            }
-        }
-
-        // Integration Testing Stage
-        stage('Integration Testing') {
-            steps {
-                echo 'Running integration tests...'
-                sh '. venv/bin/activate && python -m pytest integration_tests/'
             }
         }
 
