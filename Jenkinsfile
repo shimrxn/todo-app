@@ -6,8 +6,8 @@ pipeline {
     }
 
     stages {
-        // Build Stage
-        stage('Build') {
+        // Setup Stage (prepares environment)
+        stage('Setup') {
             steps {
                 echo 'Setting up environment and installing dependencies...'
                 sh 'python3 --version'
@@ -15,11 +15,25 @@ pipeline {
                 sh 'python3 -m venv venv'
                 sh '. venv/bin/activate && pip install --upgrade pip'
                 sh '. venv/bin/activate && pip install -r requirements.txt'
-                sh '. venv/bin/activate && pip install pytest'
+            }
+        }
 
+        // Build Stage (creates build artifact)
+        stage('Build') {
+            steps {
                 echo 'Creating build artifact...'
                 sh 'zip -r todo-app.zip *'
                 archiveArtifacts artifacts: 'todo-app.zip'
+            }
+        }
+
+        // Linting Stage (checks code formatting)
+        stage('Linting') {
+            steps {
+                echo 'Running flake8 for linting...'
+                sh '. venv/bin/activate && pip install flake8'
+                sh '. venv/bin/activate && flake8 --max-line-length=120 > lint-report.txt || true'
+                archiveArtifacts artifacts: 'lint-report.txt'
             }
         }
 
@@ -48,6 +62,15 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 sh '. venv/bin/activate && python -m pytest tests/'
+            }
+        }
+
+        // Integration Testing Stage
+        stage('Integration Testing') {
+            steps {
+                echo 'Running integration tests...'
+                // Run any additional integration tests (modify as per your project’s needs)
+                sh '. venv/bin/activate && pytest integration_tests/'
             }
         }
 
