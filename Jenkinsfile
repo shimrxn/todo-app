@@ -6,28 +6,30 @@ pipeline {
     }
 
     stages {
-        // Setup Stage: Prepares the environment by installing dependencies and pytest
+        // Setup Stage: Prepares environment and installs dependencies
         stage('Setup') {
             steps {
                 echo 'Setting up environment and installing dependencies...'
-                // Ensure Python and pip are available
+                // Check Python version and setup virtual environment
                 sh 'python3 --version'
-                // Remove existing virtual environment and create a new one
                 sh 'rm -rf venv'
                 sh 'python3 -m venv venv'
-                // Activate virtual environment and install dependencies from requirements.txt
+                // Activate virtual environment and upgrade pip
                 sh '. venv/bin/activate && pip install --upgrade pip'
+                // Install all required dependencies including pytest
                 sh '. venv/bin/activate && pip install -r requirements.txt'
-                // Install pytest for testing
+
+                // Ensure pytest is installed
                 echo 'Installing pytest...'
                 sh '. venv/bin/activate && pip install pytest'
-                // Verify pytest installation
-                echo 'Checking pytest installation...'
+
+                // Validate pytest installation
+                echo 'Validating pytest installation...'
                 sh '. venv/bin/activate && pytest --version'
             }
         }
 
-        // Build Stage: Creates a zip archive of the project as a build artifact
+        // Build Stage: Creates a zip archive of the project
         stage('Build') {
             steps {
                 echo 'Creating build artifact...'
@@ -36,7 +38,7 @@ pipeline {
             }
         }
 
-        // Linting Stage: Runs flake8 to check code formatting and syntax issues
+        // Linting Stage: Runs flake8 to check code formatting
         stage('Linting') {
             steps {
                 echo 'Running flake8 for linting...'
@@ -46,7 +48,7 @@ pipeline {
             }
         }
 
-        // Static Code Analysis: Uses pylint to identify code quality issues
+        // Static Code Analysis with pylint
         stage('Static Code Analysis') {
             steps {
                 echo 'Running pylint...'
@@ -56,7 +58,7 @@ pipeline {
             }
         }
 
-        // Security Scanning: Uses bandit to perform security checks on the code
+        // Security Scanning with bandit
         stage('Security Scanning') {
             steps {
                 echo 'Running bandit...'
@@ -66,15 +68,16 @@ pipeline {
             }
         }
 
-        // Test Stage: Runs unit tests using pytest
+        // Test Stage using pytest
         stage('Test') {
             steps {
                 echo 'Running tests...'
+                // Activate virtual environment and run pytest
                 sh '. venv/bin/activate && python -m pytest tests/'
             }
         }
 
-        // Integration Testing Stage: Runs integration tests (modify based on your tests)
+        // Integration Testing Stage
         stage('Integration Testing') {
             steps {
                 echo 'Running integration tests...'
@@ -82,19 +85,20 @@ pipeline {
             }
         }
 
-        // Deploy Stage: Deploys the app using Gunicorn on port 5000
+        // Deploy Stage using Gunicorn
         stage('Deploy') {
             steps {
                 echo 'Deploying on port 5000...'
-                // Kill any process using port 5000 and deploy the app
+                // Stop any app running on port 5000
                 sh 'fuser -k 5000/tcp || true'
+                // Deploy the app using Gunicorn
                 sh '. venv/bin/activate && gunicorn --bind 0.0.0.0:5000 app:app --daemon --log-file gunicorn.log --access-logfile gunicorn-access.log'
                 // Check if the app is running
                 sh 'curl http://localhost:5000 || echo "App did not start successfully"'
             }
         }
 
-        // Performance Testing Stage: Runs performance tests using Apache Benchmark (ab)
+        // Performance Testing Stage
         stage('Performance Testing') {
             steps {
                 echo 'Running performance tests...'
@@ -102,7 +106,7 @@ pipeline {
             }
         }
 
-        // Backup Stage: Backs up application logs for future reference
+        // Backup Stage
         stage('Backup') {
             steps {
                 echo 'Backing up logs...'
@@ -111,23 +115,24 @@ pipeline {
             }
         }
 
-        // Release Stage: Re-deploys the app to production mode using Gunicorn
+        // Release Stage
         stage('Release') {
             steps {
                 echo 'Releasing to production...'
-                // Kill any process on port 5000 and restart the app in production mode
+                // Stop any app running on port 5000 and start a new one
                 sh 'fuser -k 5000/tcp || true'
+                // Deploy the app in production mode
                 sh '. venv/bin/activate && gunicorn --bind 0.0.0.0:5000 app:app --daemon --log-file gunicorn-production.log --access-logfile gunicorn-production-access.log'
-                // Check if the app is running in production mode
+                // Check if the app is running in production
                 sh 'curl http://localhost:5000 || echo "App did not start successfully"'
             }
         }
 
-        // Monitoring and Alerting Stage: Ensures the app is running by sending a request
+        // Monitoring and Alerting Stage
         stage('Monitoring and Alerting') {
             steps {
                 echo 'Monitoring application...'
-                // Check if the app is up and running
+                // Ensure the app is still running
                 sh 'curl http://localhost:5000 || echo "App is down!"'
             }
         }
